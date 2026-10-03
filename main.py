@@ -1,4 +1,3 @@
-```python
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
@@ -37,6 +36,7 @@ def home():
                 justify-content: center;
                 align-items: center;
                 min-height: 100vh;
+                margin: 0;
             }
 
             .container {
@@ -49,6 +49,13 @@ def home():
 
             h1 {
                 text-align: center;
+                margin-bottom: 10px;
+            }
+
+            .subtitle {
+                text-align: center;
+                color: #666;
+                margin-bottom: 20px;
             }
 
             .status {
@@ -71,6 +78,7 @@ def home():
                 box-sizing: border-box;
                 border: 1px solid #ccc;
                 border-radius: 6px;
+                font-size: 15px;
             }
 
             button {
@@ -98,6 +106,16 @@ def home():
                 font-weight: bold;
                 display: none;
             }
+
+            .api-link {
+                text-align: center;
+                margin-top: 20px;
+            }
+
+            .api-link a {
+                color: #2563eb;
+                text-decoration: none;
+            }
         </style>
     </head>
 
@@ -106,6 +124,10 @@ def home():
     <div class="container">
 
         <h1>Iris Flower Predictor</h1>
+
+        <div class="subtitle">
+            Random Forest Machine Learning API
+        </div>
 
         <div class="status">
             ● ML Model Loaded
@@ -127,41 +149,63 @@ def home():
 
         <div id="result"></div>
 
+        <div class="api-link">
+            <a href="/docs" target="_blank">Open FastAPI Documentation</a>
+        </div>
+
     </div>
 
     <script>
         async function predict() {
 
             const data = {
-                sepal_length: parseFloat(document.getElementById("sepal_length").value),
-                sepal_width: parseFloat(document.getElementById("sepal_width").value),
-                petal_length: parseFloat(document.getElementById("petal_length").value),
-                petal_width: parseFloat(document.getElementById("petal_width").value)
+                sepal_length: parseFloat(
+                    document.getElementById("sepal_length").value
+                ),
+                sepal_width: parseFloat(
+                    document.getElementById("sepal_width").value
+                ),
+                petal_length: parseFloat(
+                    document.getElementById("petal_length").value
+                ),
+                petal_width: parseFloat(
+                    document.getElementById("petal_width").value
+                )
             };
 
-            const response = await fetch("/predict", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(data)
-            });
+            try {
+                const response = await fetch("/predict", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                });
 
-            const result = await response.json();
+                const result = await response.json();
 
-            const resultBox = document.getElementById("result");
+                const resultBox = document.getElementById("result");
 
-            const classes = {
-                0: "Setosa",
-                1: "Versicolor",
-                2: "Virginica"
-            };
+                const classes = {
+                    0: "Setosa",
+                    1: "Versicolor",
+                    2: "Virginica"
+                };
 
-            resultBox.style.display = "block";
+                resultBox.style.display = "block";
 
-            resultBox.innerHTML =
-                "Prediction: Class " + result.prediction +
-                " (" + classes[result.prediction] + ")";
+                resultBox.innerHTML =
+                    "Prediction: Class " +
+                    result.prediction +
+                    " (" +
+                    classes[result.prediction] +
+                    ")";
+
+            } catch (error) {
+                const resultBox = document.getElementById("result");
+                resultBox.style.display = "block";
+                resultBox.innerHTML = "Prediction failed. Please try again.";
+            }
         }
     </script>
 
@@ -181,6 +225,11 @@ def health():
 @app.post("/predict")
 def predict(data: IrisInput):
 
+    if model is None:
+        return {
+            "error": "Model not loaded"
+        }
+
     features = [[
         data.sepal_length,
         data.sepal_width,
@@ -193,4 +242,3 @@ def predict(data: IrisInput):
     return {
         "prediction": int(prediction)
     }
-```
